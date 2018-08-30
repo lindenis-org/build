@@ -55,9 +55,6 @@ eval $(awk -F'=' 'BEGIN { i = 0; print "partitions=(" } {
 		gsub(/\s/, "", $2);
 		if ($1 == "name") {
 			printf "%s=%s,", $1, $2
-			if ($2 == "UDISK") {
-				printf "size=,"
-			}
 		}
 		if ($1 == "size") {
 			printf "%s=%s,", $1, $2
@@ -82,7 +79,7 @@ for part in ${partitions[@]} ; do
 		printf "writing in $name offset: $offset, size: $(expr `wc -c < ${pack_out_dir}/$downloadfile` / 512)\n"
 		dd if=${pack_out_dir}/$downloadfile of=$flat_fw_file bs=512 seek=$offset conv=notrunc > /dev/null 2>&1
 	fi
-	if [ "x$name" != "xrootfs" ] ; then
+	if [ "x$name" != "xUDISK" ] ; then
 		offset=$(expr $offset + $size)
 	fi
 
