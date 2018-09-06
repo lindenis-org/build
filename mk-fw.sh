@@ -9,6 +9,7 @@ function do_pack()
 	echo "imagename = $img_name" >> $pack_out_dir/image.cfg
 	echo "" >> $pack_out_dir/image.cfg
 
+	echo 'generating allwinner format image...'
 	pushd $pack_out_dir > /dev/null
 	dragon image.cfg sys_partition.fex
 	if [ $? -eq 0 -a -e  $img_name ] ; then

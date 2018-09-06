@@ -82,50 +82,80 @@ function do_prepare()
 	script sys_config.fex > /dev/null
 	cp -f sys_config.bin config.fex
 
-	printf "parsing sys_partition.fex\n"
-	busybox unix2dos sys_partition.fex
-	script sys_partition.fex > /dev/null
+	if [ "x$_TARGET_CHIP" != "xsun8iw8p1" ] ; then
+		printf "parsing dts\n"
+		local dtc_compiler=${KERN_DIR}/scripts/dtc/dtc
+		local dtc_dep_file=${KERN_DIR}/arch/${_TARGET_ARCH}/boot/dts/.${_TARGET_CHIP}-soc.dtb.d.dtc.tmp
+		local dtc_src_path=${KERN_DIR}/arch/${_TARGET_ARCH}/boot/dts
+		local dtc_src_file=${KERN_DIR}/arch/${_TARGET_ARCH}/boot/dts/.${_TARGET_CHIP}-soc.dtb.dts.tmp
+		local dtc_ini_file=${pack_out_dir}/sys_config2.fex
 
-	printf "parsing dts\n"
-	local dtc_compiler=${KERN_DIR}/scripts/dtc/dtc
-	local dtc_dep_file=${KERN_DIR}/arch/${_TARGET_ARCH}/boot/dts/.${_TARGET_CHIP}-soc.dtb.d.dtc.tmp
-	local dtc_src_path=${KERN_DIR}/arch/${_TARGET_ARCH}/boot/dts
-	local dtc_src_file=${KERN_DIR}/arch/${_TARGET_ARCH}/boot/dts/.${_TARGET_CHIP}-soc.dtb.dts.tmp
-	local dtc_ini_file=${pack_out_dir}/sys_config2.fex
+		cp ${pack_out_dir}/sys_config.fex ${dtc_ini_file}
+		sed -i "s/\(\[dram\)_para\(\]\)/\1\2/g" $dtc_ini_file
+		sed -i "s/\(\[nand[0-9]\)_para\(\]\)/\1\2/g" $dtc_ini_file
 
-	cp ${pack_out_dir}/sys_config.fex ${dtc_ini_file}
-	sed -i "s/\(\[dram\)_para\(\]\)/\1\2/g" $dtc_ini_file
-	sed -i "s/\(\[nand[0-9]\)_para\(\]\)/\1\2/g" $dtc_ini_file
+		$dtc_compiler -O dtb -o ${pack_out_dir}/sunxi.fex \
+			-b 0 \
+			-i $dtc_src_path \
+			-F $dtc_ini_file \
+			-d $dtc_dep_file $dtc_src_file > /dev/null
 
-	$dtc_compiler -O dtb -o ${pack_out_dir}/sunxi.fex \
-		-b 0 \
-		-i $dtc_src_path \
-		-F $dtc_ini_file \
-		-d $dtc_dep_file $dtc_src_file > /dev/null
-
-	update_dtb sunxi.fex 4096
-	update_scp scp.fex sunxi.fex > /dev/null
+		update_dtb sunxi.fex 4096
+		update_scp scp.fex sunxi.fex > /dev/null
+	fi
 
 	printf "update bootloader\n"
 	update_boot0 boot0_nand.fex sys_config.bin NAND > /dev/null
 	update_boot0 boot0_sdcard.fex sys_config.bin SDMMC_CARD > /dev/null
-	update_uboot -no_merge u-boot.fex sys_config.bin > /dev/null
+	update_boot0 boot0_spinor.fex sys_config.bin SDMMC_CARD > /dev/null
 	update_fes1 fes1.fex sys_config.bin > /dev/null
-	busybox unix2dos boot_package.cfg
-	dragonsecboot -pack boot_package.cfg
+	if [ "x$_TARGET_CHIP" != "xsun8iw8p1" ] ; then
+		update_uboot -no_merge u-boot.fex sys_config.bin > /dev/null
+		busybox unix2dos boot_package.cfg
+		dragonsecboot -pack boot_package.cfg
+	else
+		update_uboot u-boot.fex sys_config.bin > /dev/null
+		update_uboot u-boot-spinor.fex sys_config.bin > /dev/null
+	fi
 
 	# Uncomment if using FAT filesystem at boot resource partition
 	printf "generating boot-res.fex\n"
 	fsbuild boot-res.ini split_xxxx.fex > /dev/null
 
 	printf "generating env.fex\n"
-	u_boot_env_gen env.cfg env.fex > /dev/null
+	if [ "x$_TARGET_CHIP" != "xsun8iw8p1" ] ; then
+		u_boot_env_gen env.cfg env.fex > /dev/null
+	else
+		sunxi_env_gen env.cfg env.fex > /dev/null
+	fi
 
 	ln -sf ${dev_out_dir}/kernel/uImage kernel.fex
-	ln -sf ${dev_out_dir}/rootfs.ext4 rootfs.fex
+	if [ "x$_TARGET_CHIP" != "xsun8iw8p1" ] ; then
+		ln -sf ${dev_out_dir}/rootfs.ext4 rootfs.fex
+	else
+		ln -sf ${dev_out_dir}/rootfs.squashfs rootfs.fex
+	fi
 
 	ln -sf ${dev_out_dir}/kernel/vmlinux.tar.bz2 vmlinux.fex
 
+	if [ -f sys_partition_nor.fex ] ; then
+		printf "parsing sys_partition_nor.fex\n"
+		busybox unix2dos sys_partition_nor.fex
+		script sys_partition_nor.fex > /dev/null
+		printf "generating sunxi-mbr for nor\n"
+		mv sys_partition_nor.bin sys_partition.bin
+		update_mbr sys_partition.bin 1 > /dev/null
+		printf "generating nor full image\n"
+		merge_package full_img.fex \
+			boot0_spinor.fex \
+			u-boot-spinor.fex \
+			sunxi_mbr.fex \
+			sys_partition.bin
+	fi
+
+	printf "parsing sys_partition.fex\n"
+	busybox unix2dos sys_partition.fex
+	script sys_partition.fex > /dev/null
 	printf "generating sunxi-mbr\n"
 	update_mbr sys_partition.bin 4 > /dev/null
 

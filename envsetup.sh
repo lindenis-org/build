@@ -102,6 +102,35 @@ function select_board()
 	done
 }
 
+function prepare_toolchain()
+{
+	local toolchain_archive=""
+	local toolchain_dir=""
+	
+	if [ "x$_TARGET_CHIP" != "xsun8iw8p1" ] ; then
+		toolchain_archive="${TOOLS_DIR}/build/toolchain/gcc-linaro-5.3.1-2016.05-x86_64_arm-linux-gnueabi.tar.xz"
+		toolchain_dir="${OUT_DIR}/external-toolchain/gcc-linaro-5.3.1-arm"
+	else
+		toolchain_archive="${TOOLS_DIR}/build/toolchain/gcc-linaro-6.3.1-2017.05-x86_64_arm-linux-gnueabihf.tar.xz "
+		toolchain_dir="${OUT_DIR}/external-toolchain/gcc-linaro-6.3.1-arm"
+	fi
+
+	if [ ! -d ${toolchain_dir} ] ; then
+		mkdir -p ${toolchain_dir}
+	fi
+
+	if [ ! -f ${toolchain_dir}/.stamp_extracted ] ; then
+		printf "\nPrepare toolchain..."
+		tar --strip-components=1 -xf ${toolchain_archive} -C ${toolchain_dir}
+		touch ${toolchain_dir}/.stamp_extracted
+		printf "\nDone.\n"
+	fi
+
+	if ! echo $PATH | grep -q "${toolchain_dir}" ; then
+		export PATH=${toolchain_dir}/bin:$PATH
+	fi
+}
+
 select_platform
 select_os
 select_board
@@ -111,3 +140,5 @@ export _TARGET_ARCH
 export _TARGET_PLATFORM
 export _TARGET_OS
 export _TARGET_BOARD
+
+prepare_toolchain

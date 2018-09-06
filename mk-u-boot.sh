@@ -25,11 +25,11 @@ function prepare_toolchain()
 		touch ${toolchain_dir}/.stamp_extracted
 		printf "\nDone.\n"
 	fi
+
+	export CROSS_COMPILE=${toolchain_dir}/bin/arm-linux-gnueabi-
 }
 
 prepare_toolchain
-
-export CROSS_COMPILE=${toolchain_dir}/bin/arm-linux-gnueabi-
 
 make -C $UBOOT_DIR ${_TARGET_CHIP}_config
 make -C $UBOOT_DIR -j$PARALLEL_JOBS

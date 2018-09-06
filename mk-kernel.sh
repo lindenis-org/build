@@ -7,31 +7,11 @@ fi
 
 source build/setting.mk
 
-toolchain_dir=
 dev_out_dir=${OUT_DIR}/${_TARGET_PLATFORM}/${_TARGET_BOARD}
 kern_out_dir=${dev_out_dir}/kernel
 kern_ver=`make -s kernelversion -C $KERN_DIR`
 kern_defconf=${_TARGET_CHIP}smp_defconfig
 modules_dir=${kern_out_dir}/lib/modules/${kern_ver}
-
-function prepare_toolchain()
-{
-	local toolchain_archive=""
-	
-	toolchain_archive="${TOOLS_DIR}/build/toolchain/gcc-linaro-5.3.1-2016.05-x86_64_arm-linux-gnueabi.tar.xz"
-	toolchain_dir="${OUT_DIR}/external-toolchain/gcc-linaro-5.3.1-arm"
-
-	if [ ! -d ${toolchain_dir} ] ; then
-		mkdir -p ${toolchain_dir}
-	fi
-
-	if [ ! -f ${toolchain_dir}/.stamp_extracted ] ; then
-		printf "\nPrepare toolchain..."
-		tar --strip-components=1 -xf ${toolchain_archive} -C ${toolchain_dir}
-		touch ${toolchain_dir}/.stamp_extracted
-		printf "\nDone.\n"
-	fi
-}
 
 function build_kernel()
 {
@@ -100,13 +80,11 @@ function build_ramfs()
 	echo "Do nothing right now"
 }
 
-prepare_toolchain
-
-if ! echo $PATH | grep -q "${toolchain_dir}" ; then
-	export PATH=${toolchain_dir}/bin:$PATH
+if [ "x$_TARGET_CHIP" != "xsun8iw8p1" ] ; then
+	export CROSS_COMPILE=arm-linux-gnueabi-
+else
+	export CROSS_COMPILE=arm-linux-gnueabihf-
 fi
-
-export CROSS_COMPILE=arm-linux-gnueabi-
 
 build_kernel
 build_module
