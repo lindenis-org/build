@@ -131,6 +131,43 @@ function prepare_toolchain()
 	fi
 }
 
+function mk-kernel()
+{
+	pushd $TOP_DIR > /dev/null
+	./build/mk-kernel.sh
+	popd > /dev/null
+}
+
+function mk-rootfs()
+{
+	pushd $TOP_DIR > /dev/null
+	if [ "x$_TARGET_OS" = "xdebian" ] ; then
+		./build/mk-debian.sh
+	elif [ "x$_TARGET_OS" = "xbuildroot" ] ; then
+		./build/mk-buildroot.sh
+	else
+		echo "Unknown OS"
+	fi
+	popd > /dev/null
+}
+
+function mk-pack()
+{
+	pushd $TOP_DIR > /dev/null
+	./build/mk-fw.sh
+	popd > /dev/null
+}
+
+function cout()
+{
+	cd $OUT_DIR/$_TARGET_PLATFORM/$_TARGET_BOARD
+}
+
+function croot()
+{
+	cd $TOP_DIR
+}
+
 select_platform
 select_os
 select_board
