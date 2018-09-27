@@ -189,7 +189,7 @@ function mk-installclean()
 	[ "x$_TARGET_OS" = "xbuildroot" ] || return
 	pushd $OUT_DIR/$_TARGET_PLATFORM/$_TARGET_BOARD/buildroot > /dev/null
 	find build -name .stamp_target_installed -exec rm {} \;
-	rm -rf target
+	rm -rf .config target
 	popd > /dev/null
 }
 
