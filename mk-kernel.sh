@@ -64,7 +64,7 @@ function build_kernel()
 	fi
 
 	# Used for dtb debug
-	${KERN_DIR}/scripts/dtc/dtc -I dtb -O dts -o ${kern_out_dir}/.sunxi.dts ${kern_out_dir}/sunxi.dtb
+	${KERN_DIR}/scripts/dtc/dtc -I dtb -O dts -o ${kern_out_dir}/.sunxi.dts ${kern_out_dir}/sunxi.dtb -W no-unit_address_vs_reg
 }
 
 function build_module()
@@ -73,6 +73,16 @@ function build_module()
 
 	make ARCH=$_TARGET_ARCH LICHEE_MOD_DIR=$modules_dir LICHEE_KDIR=$KERN_DIR \
 		-C $nand_dir install
+
+	local gpu_type=`sed -n '/CONFIG_SUNXI_GPU_TYPE/p' $KERN_DIR/.config | cut -d \" -f 2`
+	if [ "x$gpu_type" = "x" -o "x$gpu_type" = "xNone" ] ; then
+		echo 'No GPU'
+		return
+	fi
+
+	local gpu_dir=${KERN_DIR}/modules/gpu
+	make LICHEE_PLATFORM="linux" LICHEE_MOD_DIR=$modules_dir LICHEE_KDIR=$KERN_DIR \
+		-C $gpu_dir
 }
 
 function build_ramfs()
@@ -80,7 +90,7 @@ function build_ramfs()
 	echo "Do nothing right now"
 }
 
-if [ "x$_TARGET_CHIP" != "xsun8iw8p1" ] ; then
+if [ "x$_TARGET_CHIP" != "xsun8iw8p1" -a "x$_TARGET_CHIP" != "xsun8iw15p1" ] ; then
 	export CROSS_COMPILE=arm-linux-gnueabi-
 else
 	export CROSS_COMPILE=arm-linux-gnueabihf-

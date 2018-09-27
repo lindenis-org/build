@@ -43,8 +43,46 @@ bootloader/u-boot.bin:${pack_out_dir}/u-boot.fex
 bootloader/u-boot-spinor.bin:${pack_out_dir}/u-boot-spinor.fex
 bootloader/cpus_pm_binary.code:${pack_out_dir}/cpus_pm_binary.code
 bootloader/scp.bin:${pack_out_dir}/scp.fex
+bootloader/optee.bin:${pack_out_dir}/optee.fex
 bootloader/sboot.bin:${pack_out_dir}/sboot.fex
 )
+
+function copy_sun8iw15p1_related_files()
+{
+	local dram_type=`awk '$0~"dram_type"{ printf "%d", $3}' $pack_out_dir/sys_config.fex`
+	case $dram_type in
+		3)
+			dram_name="ddr3"
+			;;
+		4)
+			dram_name="ddr4"
+			;;
+		7)
+			dram_name="lpddr3"
+			;;
+		8)
+			dram_name="lpddr4"
+			;;
+		*)
+			exit 0
+			;;
+	esac
+
+	local boot_files=(
+		bootloader/boot0_nand_${dram_name}.bin:${pack_out_dir}/boot0_nand.fex
+		bootloader/boot0_sdcard_${dram_name}.bin:${pack_out_dir}/boot0_sdcard.fex
+		bootloader/fes1_${dram_name}.bin:${pack_out_dir}/fes1.fex
+		bootloader/sboot_${dram_name}.bin:${pack_out_dir}/sboot.fex
+		bootloader/scp_${dram_name}.bin:${pack_out_dir}/scp.fex
+	)
+
+	printf "copying related files for $dram_name\n"
+	for file in ${boot_files[@]} ; do
+		[ -f $plat_dir/`echo $file | awk -F':' '{print $1}'` ] && \
+			cp -f $plat_dir/`echo $file | awk -F':' '{print $1}'` \
+				`echo $file | awk -F':' '{print $2}'`
+	done
+}
 
 function do_prepare()
 {
@@ -75,7 +113,18 @@ function do_prepare()
 
 	cp -rf $plat_dir/boards/$_TARGET_BOARD/configs/* $pack_out_dir
 
+	if [ "x$_TARGET_CHIP" = "xsun8iw15p1" ] ; then
+		copy_sun8iw15p1_related_files
+	fi
+
 	pushd $pack_out_dir > /dev/null
+
+	cp boot-res/bootlogo.bmp .
+	cp boot-res/bat/bempty.bmp .
+	cp boot-res/bat/battery_charge.bmp .
+	lzma -k bootlogo.bmp
+	lzma -k bempty.bmp
+	lzma -k battery_charge.bmp
 
 	printf "parsing sys_config.fex\n"
 	busybox unix2dos sys_config.fex
@@ -94,7 +143,7 @@ function do_prepare()
 		sed -i "s/\(\[dram\)_para\(\]\)/\1\2/g" $dtc_ini_file
 		sed -i "s/\(\[nand[0-9]\)_para\(\]\)/\1\2/g" $dtc_ini_file
 
-		$dtc_compiler -O dtb -o ${pack_out_dir}/sunxi.fex \
+		$dtc_compiler -W no-unit_address_vs_reg -O dtb -o ${pack_out_dir}/sunxi.fex \
 			-b 0 \
 			-i $dtc_src_path \
 			-F $dtc_ini_file \
@@ -161,4 +210,3 @@ function do_prepare()
 
 	popd > /dev/null
 }
-do_prepare

@@ -107,7 +107,7 @@ function prepare_toolchain()
 	local toolchain_archive=""
 	local toolchain_dir=""
 	
-	if [ "x$_TARGET_CHIP" != "xsun8iw8p1" ] ; then
+	if [ "x$_TARGET_CHIP" != "xsun8iw8p1" -a "x$_TARGET_CHIP" != "xsun8iw15p1" ] ; then
 		toolchain_archive="${TOOLS_DIR}/build/toolchain/gcc-linaro-5.3.1-2016.05-x86_64_arm-linux-gnueabi.tar.xz"
 		toolchain_dir="${OUT_DIR}/external-toolchain/gcc-linaro-5.3.1-arm"
 	else
@@ -151,10 +151,26 @@ function mk-rootfs()
 	popd > /dev/null
 }
 
+function mk-all()
+{
+	pushd $TOP_DIR > /dev/null
+	./build.sh
+	popd > /dev/null
+}
+
 function mk-pack()
 {
 	pushd $TOP_DIR > /dev/null
 	./build/mk-fw.sh
+	popd > /dev/null
+}
+
+function mk-installclean()
+{
+	[ "x$_TARGET_OS" = "xbuildroot" ] || return
+	pushd $OUT_DIR/$_TARGET_PLATFORM/$_TARGET_BOARD/buildroot > /dev/null
+	find build -name .stamp_target_installed -exec rm {} \;
+	rm -rf target
 	popd > /dev/null
 }
 

@@ -13,6 +13,7 @@ platforms=(
 "eagle:Allwinner-V5,sun8iw12p1,arm"
 "petrel:Allwinner-H3,sun8iw7p1,arm"
 "cuckoo:Allwinner-V3,sun8iw8p1,arm"
+"magpie:Allwinner-A50,sun8iw15p1,arm"
 )
 
 OSS=(
