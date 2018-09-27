@@ -132,6 +132,24 @@ function prepare_toolchain()
 	fi
 }
 
+function mk()
+{
+	if [ "$#" -gt 1 ] ; then
+		echo "Usage:"
+		echo "    $ mk <package>"
+		return
+	elif [ "$#" -eq 1 ] ; then
+		pkg=$1
+	else
+		cur=`pwd`
+		pkg=`basename $cur`
+	fi
+
+	pushd $OUT_DIR/$_TARGET_PLATFORM/$_TARGET_BOARD/buildroot > /dev/null
+	make $pkg-rebuild
+	popd > /dev/null
+}
+
 function mk-kernel()
 {
 	pushd $TOP_DIR > /dev/null
