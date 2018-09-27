@@ -11,6 +11,7 @@ out_dir=$OUT_DIR/$_TARGET_PLATFORM/$_TARGET_BOARD
 br_out_dir=$out_dir/buildroot
 
 [ -d $out_dir ] || mkdir -p $out_dir
+rm -rf $out_dir/rootfs_overlay
 
 if [ -d $platform_dir/rootfs_overlay ] ; then
 	cp -r $platform_dir/rootfs_overlay $out_dir
