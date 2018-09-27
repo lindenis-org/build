@@ -79,6 +79,7 @@ function select_board()
 	local boarddir
 	local boards
 
+	printf "All available boards:\n"
 	for boarddir in device/$_TARGET_PLATFORM/boards/* ; do
 		boards[$cnt]=`basename $boarddir`
 		[ -d $boarddir ] || continue
