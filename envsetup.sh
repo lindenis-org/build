@@ -134,6 +134,12 @@ function prepare_toolchain()
 
 function mk()
 {
+	local br_out_dir=$OUT_DIR/$_TARGET_PLATFORM/$_TARGET_BOARD/buildroot
+	if [ ! -f $br_out_dir/.config ] ; then
+		echo "mk-rootfs firstly"
+		return
+	fi
+
 	if [ "$#" -gt 1 ] ; then
 		echo "Usage:"
 		echo "    $ mk <package>"
@@ -145,20 +151,25 @@ function mk()
 		pkg=`basename $cur`
 	fi
 
-	pushd $OUT_DIR/$_TARGET_PLATFORM/$_TARGET_BOARD/buildroot > /dev/null
+	(
+	pushd $br_out_dir > /dev/null
 	make $pkg-rebuild
 	popd > /dev/null
+	)
 }
 
 function mk-kernel()
 {
+	(
 	pushd $TOP_DIR > /dev/null
 	./build/mk-kernel.sh
 	popd > /dev/null
+	)
 }
 
 function mk-rootfs()
 {
+	(
 	pushd $TOP_DIR > /dev/null
 	if [ "x$_TARGET_OS" = "xdebian" ] ; then
 		./build/mk-debian.sh
@@ -168,29 +179,38 @@ function mk-rootfs()
 		echo "Unknown OS"
 	fi
 	popd > /dev/null
+	)
 }
 
 function mk-all()
 {
+	(
 	pushd $TOP_DIR > /dev/null
 	./build.sh
 	popd > /dev/null
+	)
 }
 
 function mk-pack()
 {
+	(
 	pushd $TOP_DIR > /dev/null
 	./build/mk-fw.sh
 	popd > /dev/null
+	)
 }
 
 function mk-installclean()
 {
 	[ "x$_TARGET_OS" = "xbuildroot" ] || return
-	pushd $OUT_DIR/$_TARGET_PLATFORM/$_TARGET_BOARD/buildroot > /dev/null
+	local br_out_dir=$OUT_DIR/$_TARGET_PLATFORM/$_TARGET_BOARD/buildroot
+
+	(
+	pushd $br_out_dir > /dev/null
 	find build -name .stamp_target_installed -exec rm {} \;
 	rm -rf .config target
 	popd > /dev/null
+	)
 }
 
 function cout()

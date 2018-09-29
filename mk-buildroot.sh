@@ -25,8 +25,10 @@ if [ -f $board_dir/module.install ] ; then
 	cp $board_dir/module.install $out_dir
 fi
 
-eval $(sed -n '/^config/p' $DEVICE_DIR/$_TARGET_PLATFORM/boards/$_TARGET_BOARD/buildroot.config)
-[ ! -f $BR_DIR/configs/$config ] && echo "No config exist ($config)" && exit -1
-[ ! -f $br_out_dir/.config ] && make -C $BR_DIR O=$br_out_dir $config
+if [ ! -f $br_out_dir/.config ] ; then
+	eval $(sed -n '/^config/p' $board_dir/buildroot.config)
+	[ ! -f $BR_DIR/configs/$config ] && echo "No config exist ($config)" && exit -1
+	make -C $BR_DIR O=$br_out_dir $config
+fi
 
 make -C $BR_DIR O=$br_out_dir
