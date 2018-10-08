@@ -38,8 +38,13 @@ dd if=/dev/zero of=$flat_fw_file bs=512 count=0 seek=$bootloader_size > /dev/nul
 printf "writing in boot0, offset: $boot0_start, size: $(expr `wc -c < ${pack_out_dir}/boot0_sdcard.fex` / 512)\n"
 dd if=${pack_out_dir}/boot0_sdcard.fex of=$flat_fw_file bs=512 seek=$boot0_start conv=notrunc > /dev/null 2>&1
 
-printf "writing in u-boot, offset: $uboot_start, size: $(expr `wc -c < ${pack_out_dir}/boot_package.fex` / 512)\n"
-dd if=${pack_out_dir}/boot_package.fex of=$flat_fw_file bs=512 seek=$uboot_start conv=notrunc > /dev/null 2>&1
+if [ "x$_TARGET_CHIP" != "xsun8iw8p1" ] ; then
+	uboot=boot_package.fex
+else
+	uboot=u-boot.fex
+fi
+printf "writing in u-boot, offset: $uboot_start, size: $(expr `wc -c < ${pack_out_dir}/${uboot}` / 512)\n"
+dd if=${pack_out_dir}/${uboot} of=$flat_fw_file bs=512 seek=$uboot_start conv=notrunc > /dev/null 2>&1
 
 printf "writing in sunxi-mbr, offset: $sunxi_mbr_start, size: $(expr `wc -c < ${pack_out_dir}/sunxi_mbr.fex` / 512)\n"
 dd if=${pack_out_dir}/sunxi_mbr.fex of=$flat_fw_file bs=512 seek=$sunxi_mbr_start conv=notrunc > /dev/null 2>&1
