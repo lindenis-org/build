@@ -179,10 +179,10 @@ function do_prepare()
 	fi
 
 	ln -sf ${dev_out_dir}/kernel/uImage kernel.fex
-	if [ "x$_TARGET_CHIP" != "xsun8iw8p1" ] ; then
-		ln -sf ${dev_out_dir}/rootfs.ext4 rootfs.fex
-	else
+	if [ -f sys_partition_nor.fex ] ; then
 		ln -sf ${dev_out_dir}/rootfs.squashfs rootfs.fex
+	else
+		ln -sf ${dev_out_dir}/rootfs.ext4 rootfs.fex
 	fi
 
 	ln -sf ${dev_out_dir}/kernel/vmlinux.tar.bz2 vmlinux.fex
