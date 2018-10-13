@@ -64,7 +64,11 @@ function build_kernel()
 	fi
 
 	# Used for dtb debug
-	${KERN_DIR}/scripts/dtc/dtc -I dtb -O dts -o ${kern_out_dir}/.sunxi.dts ${kern_out_dir}/sunxi.dtb -W no-unit_address_vs_reg
+	if [ "x$_TARGET_CHIP" != "xsun8iw15p1" ] ; then
+		${KERN_DIR}/scripts/dtc/dtc -I dtb -O dts -o ${kern_out_dir}/.sunxi.dts ${kern_out_dir}/sunxi.dtb
+	else
+		${KERN_DIR}/scripts/dtc/dtc -I dtb -O dts -o ${kern_out_dir}/.sunxi.dts ${kern_out_dir}/sunxi.dtb -W no-unit_address_vs_reg
+	fi
 }
 
 function build_module()

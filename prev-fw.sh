@@ -143,11 +143,19 @@ function do_prepare()
 		sed -i "s/\(\[dram\)_para\(\]\)/\1\2/g" $dtc_ini_file
 		sed -i "s/\(\[nand[0-9]\)_para\(\]\)/\1\2/g" $dtc_ini_file
 
-		$dtc_compiler -W no-unit_address_vs_reg -O dtb -o ${pack_out_dir}/sunxi.fex \
-			-b 0 \
-			-i $dtc_src_path \
-			-F $dtc_ini_file \
-			-d $dtc_dep_file $dtc_src_file > /dev/null
+		if [ "x$_TARGET_CHIP" != "xsun8iw15p1" ] ; then
+			$dtc_compiler -O dtb -o ${pack_out_dir}/sunxi.fex \
+				-b 0 \
+				-i $dtc_src_path \
+				-F $dtc_ini_file \
+				-d $dtc_dep_file $dtc_src_file > /dev/null
+		else
+			$dtc_compiler -W no-unit_address_vs_reg -O dtb -o ${pack_out_dir}/sunxi.fex \
+				-b 0 \
+				-i $dtc_src_path \
+				-F $dtc_ini_file \
+				-d $dtc_dep_file $dtc_src_file > /dev/null
+		fi
 
 		update_dtb sunxi.fex 4096
 		update_scp scp.fex sunxi.fex > /dev/null
