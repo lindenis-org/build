@@ -76,7 +76,7 @@ offset=$bootloader_size
 for part in ${partitions[@]} ; do
 	eval $(echo $part | awk -F',' '{ print $1, $2, $3}')
 
-	if [ x$name == "xrootfs" ] ; then
+	if [ "x$name" == "xUDISK" ] ; then
 		break
 	fi
 
